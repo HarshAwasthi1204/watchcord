@@ -1,7 +1,10 @@
+import billiard.process
+import billiard.queues
 import scrapy
 from pathlib import Path
 import pandas as pd
 import os
+from multiprocessing import Process, Queue
 # from crochet import setup
 # setup()
 
@@ -9,8 +12,9 @@ class AmazonSpider(scrapy.Spider):
     name = "amazon"
     # allowed_domains = ["amazon.in"]
     # start_urls = ["https://amazon.in"]
-    # data = {'titles': [], 'prices': [], 'images': [], 'asin': []}
-    datademo = {}
+    data = {'titles': [], 'prices': [], 'images': [], 'asins': []}
+    # datademo = {}
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
 
     def __init__(self, start_urls_demo: list[str]):
         super().__init__(self.name, start_urls=start_urls_demo)
@@ -30,7 +34,7 @@ class AmazonSpider(scrapy.Spider):
 
         # ]
         for url in self.start_urls:
-            yield scrapy.Request(url=url, callback=self.parse)
+            yield scrapy.Request(url=url, callback=self.parse, headers=self.headers)
 
     def parse(self, response):
         title = response.css('span#productTitle::text').get().strip()
@@ -41,15 +45,17 @@ class AmazonSpider(scrapy.Spider):
         # category = response.css('ul.a-unordered-list.a-nostyle.a-vertical.a-spacing-none.detail-bullet-list').get()
         # print("PRINTING:\n")
         # print("Title:", title, "Price:", pricesymbol+price, "Image:", image)
-        # self.datademo['title'].append(title)
-        # self.datademo['price'].append(pricesymbol+price)
-        # self.datademo['image'].append(image)
-        # self.datademo['asin'].append(asin)
-        self.datademo['title'] = title
-        self.datademo['price'] = pricesymbol+price
-        self.datademo['image'] = image
-        self.datademo['asin'] = asin
+        self.data['titles'].append(title)
+        self.data['prices'].append(pricesymbol+price)
+        self.data['images'].append(image)
+        self.data['asins'].append(asin)
+        # self.datademo['title'] = title
+        # self.datademo['price'] = pricesymbol+price
+        # self.datademo['image'] = image
+        # self.datademo['asin'] = asin
         self.log(f"Done writing {title} to dict.")
+        self.log(f"Data: {self.data}")
+        # self.log(f"Raw Data: {response.text}")
 
     # def close(self, reason):
     #     # Check if the directory exists
@@ -67,7 +73,8 @@ class AmazonSpider(scrapy.Spider):
     #     final_filename = f"{base_filename}{file_number}.csv"
 
     #     # Writing the data to a CSV file using pandas
-    #     df = pd.DataFrame(self.data)
+    #     # df = pd.DataFrame(self.datademo)
+    #     df = pd.DataFrame(self.datademo, index=[0])
     #     df.to_csv(final_filename, index=False)
 
     #     self.log(f"Data written to {final_filename}.")
@@ -76,16 +83,55 @@ class AmazonSpider(scrapy.Spider):
     #     self.crawled_data = self.datademo
 
 
-# Sample Code DELETE LATER
+# # Sample Code DELETE LATER
+# from scrapy.crawler import CrawlerProcess
+# from scrapy.utils.project import get_project_settings
+# async def run_spider(start_urls_demo):
+#     try:
+#         process = CrawlerProcess(get_project_settings())
+#         spider = AmazonSpider
+#         process.crawl(spider, start_urls_demo=start_urls_demo) #type: ignore
+#         process.start(stop_after_crawl=False)
+#     except Exception as e:
+#         print(f"Failed to run spider: {e.__class__.__name__}")
+#         return spider.datademo
+#     return spider.datademo
+
+# Testing Stuff Here Might Delete Later
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+
+def start_p(start_urls_demo_lol, queue):
+    process = CrawlerProcess(get_project_settings())
+    spider = AmazonSpider
+    process.crawl(spider, start_urls_demo=start_urls_demo_lol) #type: ignore
+    process.start()
+    queue.put(spider.data)
+
 async def run_spider(start_urls_demo):
+    queue = Queue()
     try:
-        process = CrawlerProcess(get_project_settings())
-        spider = AmazonSpider
-        process.crawl(spider, start_urls_demo=start_urls_demo) #type: ignore
+        process = Process(target=start_p, args=(start_urls_demo, queue))
+        print(f"Process ID: {id(process)} Queue ID: {id(queue)}")
         process.start()
+        result = queue.get()
+        process.join()
     except Exception as e:
         print(f"Failed to run spider: {e.__class__.__name__}")
-        return spider.datademo
-    return spider.datademo
+        return result
+    return result
+
+from billiard import Process as Process2
+from billiard import Queue as Queue2
+def run_spider2(start_urls_demo):
+    queue = Queue2()
+    try:
+        process = Process2(target=start_p, args=(start_urls_demo, queue))
+        print(f"Process ID: {id(process)} Queue ID: {id(queue)}")
+        process.start()
+        result = queue.get()
+        process.join()
+        return result
+    except Exception as e:
+        print(f"Failed to run spider: {e.__class__.__name__}")
+        return result

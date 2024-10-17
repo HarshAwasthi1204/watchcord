@@ -1,10 +1,6 @@
-from dotenv import load_dotenv
+from fastapi import FastAPI, Body
+from scrapers.scrapers.spiders.amazon import run_spider
 
-load_dotenv()
-
-from fastapi import FastAPI, BackgroundTasks, Body
-from .scrapers.scrapers.spiders.amazon import run_spider
-import discord
 app = FastAPI()
 
 # async def printstuff(url:str):
@@ -22,7 +18,7 @@ async def scrape_amazon(urls: str):
     data = await run_spider(url_list)
     return data
 
-from .celery_workers.worker import random_task, scrape_amazon_task, schedule_tasks_with_redbeat, remove_scheduled_tasks_with_redbeat
+from ..celery_workers.worker import random_task, scrape_amazon_task, schedule_tasks_with_redbeat, remove_scheduled_tasks_with_redbeat
 from celery.result import AsyncResult
 @app.get("/testcelery/")
 async def test_celery(name:str):

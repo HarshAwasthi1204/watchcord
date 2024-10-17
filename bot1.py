@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import pandas as pd
 import os
-from ..scrapers.scrapers.spiders.amazon import run_spider
+from scrapers.scrapers.spiders.amazon import run_spider
 # import requests
 import aiohttp
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -135,5 +135,4 @@ async def test_celery_schedule_delete(interaction: discord.Interaction, test_key
     await interaction.response.defer()
     celery_deleted_schedule_data = await get_test_celery_schedule_delete(test_key=test_key)
     await interaction.followup.send(f"{interaction.user.mention} celery says: `{celery_deleted_schedule_data}`")
-
 bot.run(DISCORD_TOKEN) # type: ignore
