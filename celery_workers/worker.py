@@ -29,6 +29,22 @@ def scrape_amazon_task(urls: str):
 
 from discord import SyncWebhook
 import discord
+# @celery_app.task(name='watchcord.celery_workers.worker.scrape_amazon_with_webhook_task')
+# def scrape_amazon_with_webhook_task(urls: str, user: str):
+#     webhook = SyncWebhook.from_url("https://discord.com/api/webhooks/1295990950216335400/X-8Y0HsMygXza-0MGBraAe15OA6msYj6oiWoW_2_GXAQCwAM429Lt_NUq--bpECIgkUe")
+#     url_list = urls.split(',')
+#     data = run_spider2(url_list)
+#     print(f"Data: {data}")
+#     print(f"Sending Data via Webhook: {webhook.url}")
+#     for i in range(len(data['asins'])):
+#         embed = discord.Embed(title=data['titles'][i], color=discord.Color.blue())
+#         embed.set_author(name="Scraped Product")
+#         embed.add_field(name="Price", value=data['prices'][i], inline=False)
+#         embed.add_field(name="ASIN", value=data['asins'][i], inline=False)
+#         embed.set_image(url=data["images"][i])
+#         webhook.send(f"Hey <@{user}>! Here's your Scheduled data by Celery!",embed=embed)
+#     return "Webhook Sent"
+
 @celery_app.task(name='watchcord.celery_workers.worker.scrape_amazon_with_webhook_task')
 def scrape_amazon_with_webhook_task(urls: str, user: str):
     webhook = SyncWebhook.from_url("https://discord.com/api/webhooks/1295990950216335400/X-8Y0HsMygXza-0MGBraAe15OA6msYj6oiWoW_2_GXAQCwAM429Lt_NUq--bpECIgkUe")
@@ -38,9 +54,17 @@ def scrape_amazon_with_webhook_task(urls: str, user: str):
     print(f"Sending Data via Webhook: {webhook.url}")
     for i in range(len(data['asins'])):
         embed = discord.Embed(title=data['titles'][i], color=discord.Color.blue())
-        embed.set_author(name="Scraped Product")
-        embed.add_field(name="Price", value=data['prices'][i], inline=False)
-        embed.add_field(name="ASIN", value=data['asins'][i], inline=False)
+        embed.set_author(name=f"{user}'s Scraped Product")
+        embed.add_field(name="Domain", value=data['domains'][i], inline=True)
+        embed.add_field(name="Product ID", value=data['asins'][i], inline=True)
+        embed.add_field(name="Rating", value=data['ratings'][i], inline=True)
+        embed.add_field(name="MRP", value=data['mrps'][i], inline=True)
+        embed.add_field(name="Discount", value=data['discount_percentages'][i], inline=True)
+        embed.add_field(name="Current Price", value=data['current_prices'][i], inline=True)
+        # embed.add_field(name="Categories", value=data['categories'][i], inline=False)
+        embed.add_field(name="Categories", value=", ".join(category for category in data['categories'][i]), inline=False)
+        # embed.add_field(name="Description", value=data['descriptions'][i][0:2], inline=False)
+        embed.add_field(name="Description", value="\n".join(description for description in data['descriptions'][i][0:3]), inline=False)
         embed.set_image(url=data["images"][i])
         webhook.send(f"Hey <@{user}>! Here's your Scheduled data by Celery!",embed=embed)
     return "Webhook Sent"

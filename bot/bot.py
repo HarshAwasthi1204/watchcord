@@ -6,8 +6,12 @@ import os
 from ..scrapers.scrapers.spiders.amazon import run_spider
 # import requests
 import aiohttp
+import logging
+
+discord.utils.setup_logging(level=logging.DEBUG, root=False)
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+
 
 @bot.event
 async def on_ready():
@@ -81,6 +85,21 @@ async def get_test_celery_schedule_delete(test_key):
             response_data = await response.json()
     return response_data
 
+# @bot.tree.command(name="amazonscrapingdemo")
+# @app_commands.describe(urls_to_scrape = "URL To Scrape:")
+# async def amazonscrapingdemo(interaction: discord.Interaction, urls_to_scrape: str):
+#     await interaction.response.defer()
+#     spider_data = await get_spider_data(urls_to_scrape=urls_to_scrape)
+#     for i in range(len(spider_data['asins'])):
+#         embed = discord.Embed(title=spider_data['titles'][i], color=discord.Color.blue())
+#         embed.set_author(name="Scraped Product")
+#         embed.add_field(name="Price", value=spider_data['prices'][i], inline=False)
+#         embed.add_field(name="ASIN", value=spider_data['asins'][i], inline=False)
+#         embed.set_image(url=spider_data["images"][i])
+#         await interaction.followup.send(f"Hey {interaction.user.mention}! Here's your data!",embed=embed)
+#     # await interaction.response.send_message(embed=embed)
+#     # await interaction.followup.send(f"{spider_data}")
+
 @bot.tree.command(name="amazonscrapingdemo")
 @app_commands.describe(urls_to_scrape = "URL To Scrape:")
 async def amazonscrapingdemo(interaction: discord.Interaction, urls_to_scrape: str):
@@ -88,9 +107,17 @@ async def amazonscrapingdemo(interaction: discord.Interaction, urls_to_scrape: s
     spider_data = await get_spider_data(urls_to_scrape=urls_to_scrape)
     for i in range(len(spider_data['asins'])):
         embed = discord.Embed(title=spider_data['titles'][i], color=discord.Color.blue())
-        embed.set_author(name="Scraped Product")
-        embed.add_field(name="Price", value=spider_data['prices'][i], inline=False)
-        embed.add_field(name="ASIN", value=spider_data['asins'][i], inline=False)
+        embed.set_author(name=f"{interaction.user.display_name}'s Scraped Product")
+        embed.add_field(name="Domain", value=spider_data['domains'][i], inline=True)
+        embed.add_field(name="Product ID", value=spider_data['asins'][i], inline=True)
+        embed.add_field(name="Rating", value=spider_data['ratings'][i], inline=True)
+        embed.add_field(name="MRP", value=spider_data['mrps'][i], inline=True)
+        embed.add_field(name="Discount", value=spider_data['discount_percentages'][i], inline=True)
+        embed.add_field(name="Current Price", value=spider_data['current_prices'][i], inline=True)
+        # embed.add_field(name="Categories", value=spider_data['categories'][i], inline=False)
+        embed.add_field(name="Categories", value=", ".join(category for category in spider_data['categories'][i]), inline=False)
+        # embed.add_field(name="Description", value=spider_data['descriptions'][i][0:2], inline=False)
+        embed.add_field(name="Description", value="\n".join(description for description in spider_data['descriptions'][i][0:3]), inline=False)
         embed.set_image(url=spider_data["images"][i])
         await interaction.followup.send(f"Hey {interaction.user.mention}! Here's your data!",embed=embed)
     # await interaction.response.send_message(embed=embed)
