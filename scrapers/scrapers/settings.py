@@ -13,7 +13,8 @@ SPIDER_MODULES = ["scrapers.spiders"]
 NEWSPIDER_MODULE = "scrapers.spiders"
 
 # ScrapeOps settings
-SCRAPEOPS_API_KEY = 'be2da54b-d3b1-40b9-b57b-52bfb268745a'
+import os
+SCRAPEOPS_API_KEY = os.getenv("SCRAPEOPS_API_KEY")
 SCRAPEOPS_PROXY_ENABLED = True
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

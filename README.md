@@ -28,6 +28,12 @@ To run this project, you will need to add the following environment variables to
 
 `PUBLIC_KEY`
 
+`BROKER_URL`
+
+`BACKEND_URL`
+
+`SCRAPEOPS_API_KEY`
+
 
 ## Run Locally
 
