@@ -289,8 +289,8 @@ async def run_spider(start_urls_demo):
         return result
     return result
 
-from billiard import Process as Process2
-from billiard import Queue as Queue2
+from billiard import Process as Process2 #type: ignore
+from billiard import Queue as Queue2 #type: ignore
 def run_spider2(start_urls_demo):
     queue = Queue2()
     try:

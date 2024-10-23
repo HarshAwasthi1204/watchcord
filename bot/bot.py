@@ -3,15 +3,20 @@ from discord import app_commands
 from discord.ext import commands
 import pandas as pd
 import os
-from ..scrapers.scrapers.spiders.amazon import run_spider
+# from ..scrapers.scrapers.spiders.amazon import run_spider
+from scrapers.scrapers.spiders.amazon import run_spider
 # import requests
 import aiohttp
 import logging
+# from dotenv import load_dotenv
 
 discord.utils.setup_logging(level=logging.DEBUG, root=False)
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# if not DISCORD_TOKEN:
+#     load_dotenv()
+#     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
-
 
 @bot.event
 async def on_ready():
@@ -163,4 +168,4 @@ async def test_celery_schedule_delete(interaction: discord.Interaction, test_key
     celery_deleted_schedule_data = await get_test_celery_schedule_delete(test_key=test_key)
     await interaction.followup.send(f"{interaction.user.mention} celery says: `{celery_deleted_schedule_data}`")
 
-bot.run(DISCORD_TOKEN) # type: ignore
+# bot.run(DISCORD_TOKEN) # type: ignore

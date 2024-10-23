@@ -1,3 +1,4 @@
+###MEANT TO BE PLACED IN THE PARENT DIRECTORY. TO BE USED FOR TESTING PURPOSES ONLY.###
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -7,8 +8,13 @@ from scrapers.scrapers.spiders.amazon import run_spider
 # import requests
 import aiohttp
 import logging
+# from dotenv import load_dotenv
 
 discord.utils.setup_logging(level=logging.DEBUG, root=False)
+# DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# if not DISCORD_TOKEN:
+#     load_dotenv()
+#     DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
@@ -113,7 +119,7 @@ async def amazonscrapingdemo(interaction: discord.Interaction, urls_to_scrape: s
         embed.add_field(name="MRP", value=spider_data['mrps'][i], inline=True)
         embed.add_field(name="Discount", value=spider_data['discount_percentages'][i], inline=True)
         embed.add_field(name="Current Price", value=spider_data['current_prices'][i], inline=True)
-        #  embed.add_field(name="Categories", value=spider_data['categories'][i], inline=False)
+        # embed.add_field(name="Categories", value=spider_data['categories'][i], inline=False)
         embed.add_field(name="Categories", value=", ".join(category for category in spider_data['categories'][i]), inline=False)
         # embed.add_field(name="Description", value=spider_data['descriptions'][i][0:2], inline=False)
         embed.add_field(name="Description", value="\n".join(description for description in spider_data['descriptions'][i][0:3]), inline=False)

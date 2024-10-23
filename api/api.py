@@ -1,32 +1,34 @@
-from fastapi import FastAPI, Body
-from scrapers.scrapers.spiders.amazon import run_spider
+from fastapi import APIRouter, Body
+from ..scrapers.scrapers.spiders.amazon import run_spider
+import discord
+from discord import SyncWebhook
+from ..celery_tasks.tasks import random_task, scrape_amazon_task, schedule_tasks_with_redbeat, remove_scheduled_tasks_with_redbeat
+from celery.result import AsyncResult
 
-app = FastAPI()
+router = APIRouter()
 
 # async def printstuff(url:str):
 #     data = await run_spider([url])
 #     print(data)
 
-# @app.get("/scrapeamazon/")
+# @router.get("/scrapeamazon/")
 # async def scrape_amazon(background_tasks: BackgroundTasks, url: str):
 #     background_tasks.add_task(printstuff, url)
 #     return {"data": "task added"}
 
-@app.get("/scrapeamazon/")
+@router.get("/scrapeamazon/")
 async def scrape_amazon(urls: str):
     url_list = urls.split(',')
     data = await run_spider(url_list)
     return data
 
-from ..celery_workers.worker import random_task, scrape_amazon_task, schedule_tasks_with_redbeat, remove_scheduled_tasks_with_redbeat
-from celery.result import AsyncResult
-@app.get("/testcelery/")
+@router.get("/testcelery/")
 async def test_celery(name:str):
     task = random_task.delay(name)
     task_result = AsyncResult(task.id)
     return task_result.result
 
-@app.get("/scrapeamazoncelery/")
+@router.get("/scrapeamazoncelery/")
 async def scrape_amazon_celery(urls:str):
     task = scrape_amazon_task.delay(urls)
     # task_result = AsyncResult(task.id)
@@ -35,20 +37,17 @@ async def scrape_amazon_celery(urls:str):
     task_result = AsyncResult(task.id)
     return {"task_id":task_result.id, "task_status":task_result.status, "task_result":task_result.result}
 
-@app.get("/scheduletaskdemo/")
+@router.get("/scheduletaskdemo/")
 async def schedule_task_demo(urls:str, test_schedule:int, user:str):
     scheduled_task=schedule_tasks_with_redbeat(urls, test_schedule, user)
     return {"task":str(scheduled_task)}
 
-@app.get("/deletescheduledtaskdemo/")
+@router.get("/deletescheduledtaskdemo/")
 async def delete_scheduled_task_demo(key:str):
     deleted_scheduled_task=remove_scheduled_tasks_with_redbeat(key)
     return {"task":str(deleted_scheduled_task)}
 
-
-from discord import SyncWebhook
-import discord
-@app.post("/webhooktest/{user_id}")
+@router.post("/webhooktest/{user_id}")
 async def webhooktest(user_id: str, webhook_data: dict = Body(...)):
     webhook = SyncWebhook.from_url("https://discord.com/api/webhooks/1295990950216335400/X-8Y0HsMygXza-0MGBraAe15OA6msYj6oiWoW_2_GXAQCwAM429Lt_NUq--bpECIgkUe")
     print(f"Sending Data via Webhook: {webhook.url}")
