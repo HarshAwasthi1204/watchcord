@@ -76,7 +76,7 @@ try:
         return JSONResponse(content={"message" : "User Successfully Updated", "user_id" : str(update_user_check["_id"])})
     
     @dbrouter.delete("/deleteuser/{discord_id}", status_code=200, response_class=JSONResponse)
-    async def delete_user(discord_id: str, password: str) -> JSONResponse:
+    async def delete_user(discord_id: str) -> JSONResponse:
         delete_user_check = db.Users.find_one({"discord_id" : discord_id})
         if not delete_user_check:
             return JSONResponse(content={"message" : "User Not Found"},status_code=404)
