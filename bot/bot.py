@@ -93,6 +93,12 @@ async def get_test_celery_schedule_delete(test_key):
             response_data = await response.json()
     return response_data
 
+async def get_recommendation_data(query):
+    async with aiohttp.ClientSession() as session:
+        async with session.get('https://testcord.onrender.com/search/', params={"query":query}) as response:
+            response_data = await response.json()
+    return response_data
+
 # @bot.tree.command(name="amazonscrapingdemo")
 # @app_commands.describe(urls_to_scrape = "URL To Scrape:")
 # async def amazonscrapingdemo(interaction: discord.Interaction, urls_to_scrape: str):
@@ -170,5 +176,14 @@ async def test_celery_schedule_delete(interaction: discord.Interaction, test_key
     await interaction.response.defer()
     celery_deleted_schedule_data = await get_test_celery_schedule_delete(test_key=test_key)
     await interaction.followup.send(f"{interaction.user.mention} celery says: `{celery_deleted_schedule_data}`")
+
+@bot.tree.command(name="recommendation_test")
+@app_commands.describe(query="Name/Keyword for recommendation: ")
+async def recommendation_test(interaction: discord.Interaction, query: str):
+    await interaction.response.defer()
+    recommendation_data = await get_recommendation_data(query)
+    for recommendation in recommendation_data["results"][0:3]:
+        await interaction.followup.send(f"""Domain: {recommendation["output"]} \nTitle: {recommendation["title"]} \nCategories: {recommendation["categories"]} \nRating: {recommendation["rating"]}""")
+    # await interaction.followup.send(f"Model Output: {recommendation_data}")
 
 # bot.run(DISCORD_TOKEN) # type: ignore

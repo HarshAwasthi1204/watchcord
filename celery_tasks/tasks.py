@@ -59,11 +59,16 @@ def scrape_amazon_with_webhook_task(urls: str, user: str):
     print(f"Data: {data}")
     print(f"Sending Data via Webhook: {webhook.url}")
     for i in range(len(data['asins'])):
+
         tracked_product_db = requests.post("http://localhost:8000/createtrackedproduct/", json=TrackedProduct(product_id=data['asins'][i], title=data['titles'][i], mrp=data['mrps'][i], discount_percentage=data['discount_percentages'][i], current_price=data['current_prices'][i], categories=data['categories'][i], description=data['descriptions'][i], rating=data['ratings'][i], domain=data['domains'][i], image=data['images'][i]).model_dump())
         print("Tracked Product DB Response: ",tracked_product_db.text)
         if tracked_product_db.status_code == 409:
             tracked_product_db_update = requests.put(f"http://localhost:8000/updatetrackedproduct/{data['domains'][i]}/{data['asins'][i]}", json=TrackedProduct(product_id=data['asins'][i], title=data['titles'][i], mrp=data['mrps'][i], discount_percentage=data['discount_percentages'][i], current_price=data['current_prices'][i], categories=data['categories'][i], description=data['descriptions'][i], rating=data['ratings'][i], domain=data['domains'][i], image=data['images'][i]).model_dump())
             print("Tracked Product DB Response: ",tracked_product_db_update.text)
+        
+        model_feed = requests.post("https://testcord.onrender.com/upload_new_data", json=TrackedProduct(product_id=data['asins'][i], title=data['titles'][i], mrp=data['mrps'][i], discount_percentage=data['discount_percentages'][i], current_price=data['current_prices'][i], categories=data['categories'][i], description=data['descriptions'][i], rating=data['ratings'][i], domain=data['domains'][i], image=data['images'][i]).model_dump())
+        print("Model DB response: ", model_feed.text)
+        
         embed = discord.Embed(title=data['titles'][i], color=discord.Color.blue())
         embed.set_author(name=f"{user}'s Scraped Product")
         embed.add_field(name="Domain", value=data['domains'][i], inline=True)
