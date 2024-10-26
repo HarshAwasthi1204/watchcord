@@ -10,6 +10,8 @@ from redbeat import RedBeatSchedulerEntry
 from redbeat.schedules import rrule
 import discord
 from discord import SyncWebhook
+import requests
+from api.models.models import User, TrackedProduct, ScheduledTask
 
 # celery_app = Celery(__name__)
 
@@ -57,6 +59,11 @@ def scrape_amazon_with_webhook_task(urls: str, user: str):
     print(f"Data: {data}")
     print(f"Sending Data via Webhook: {webhook.url}")
     for i in range(len(data['asins'])):
+        tracked_product_db = requests.post("http://localhost:8000/createtrackedproduct/", json=TrackedProduct(product_id=data['asins'][i], title=data['titles'][i], mrp=data['mrps'][i], discount_percentage=data['discount_percentages'][i], current_price=data['current_prices'][i], categories=data['categories'][i], description=data['descriptions'][i], rating=data['ratings'][i], domain=data['domains'][i], image=data['images'][i]).model_dump())
+        print("Tracked Product DB Response: ",tracked_product_db.text)
+        if tracked_product_db.status_code == 409:
+            tracked_product_db_update = requests.put(f"http://localhost:8000/updatetrackedproduct/{data['domains'][i]}/{data['asins'][i]}", json=TrackedProduct(product_id=data['asins'][i], title=data['titles'][i], mrp=data['mrps'][i], discount_percentage=data['discount_percentages'][i], current_price=data['current_prices'][i], categories=data['categories'][i], description=data['descriptions'][i], rating=data['ratings'][i], domain=data['domains'][i], image=data['images'][i]).model_dump())
+            print("Tracked Product DB Response: ",tracked_product_db_update.text)
         embed = discord.Embed(title=data['titles'][i], color=discord.Color.blue())
         embed.set_author(name=f"{user}'s Scraped Product")
         embed.add_field(name="Domain", value=data['domains'][i], inline=True)
@@ -68,7 +75,7 @@ def scrape_amazon_with_webhook_task(urls: str, user: str):
         # embed.add_field(name="Categories", value=data['categories'][i], inline=False)
         embed.add_field(name="Categories", value=", ".join(category for category in data['categories'][i]), inline=False)
         # embed.add_field(name="Description", value=data['descriptions'][i][0:2], inline=False)
-        embed.add_field(name="Description", value="\n".join(description for description in data['descriptions'][i][0:3]), inline=False)
+        embed.add_field(name="Description", value="\n".join(description for description in data['descriptions'][i][0:3])[:1024], inline=False)
         embed.set_image(url=data["images"][i])
         webhook.send(f"Hey <@{user}>! Here's your Scheduled data by Celery!",embed=embed)
     return "Webhook Sent"

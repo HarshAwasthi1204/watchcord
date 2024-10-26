@@ -5,6 +5,7 @@ import pandas as pd
 import os
 # from ..scrapers.scrapers.spiders.amazon import run_spider
 from scrapers.scrapers.spiders.amazon import run_spider
+from api.models.models import User, TrackedProduct, ScheduledTask
 # import requests
 import aiohttp
 import logging
@@ -78,11 +79,13 @@ async def get_celery_spider_data(urls_to_scrape):
             response_data = await response.json()
     return response_data
 
-async def get_test_celery_schedule(test_url, test_schedule, user):
+async def get_test_celery_schedule(test_url, test_schedule, userid, username):
     async with aiohttp.ClientSession() as session:
-        async with session.get('http://localhost:8000/scheduletaskdemo/', params={"urls":test_url,"test_schedule":test_schedule, "user":user}) as response:
+        async with session.post('http://localhost:8000/createuser/', json=User(discord_id=userid, username=username).model_dump()) as response:
+            createuser_response_data = await response.json()
+        async with session.get('http://localhost:8000/scheduletaskdemo/', params={"urls":test_url,"test_schedule":test_schedule, "user":userid}) as response:
             response_data = await response.json()
-    return response_data
+    return response_data, createuser_response_data
 
 async def get_test_celery_schedule_delete(test_key):
     async with aiohttp.ClientSession() as session:
@@ -158,7 +161,7 @@ async def scrape_amazon_celery_demo(interaction: discord.Interaction, urls_to_sc
 @app_commands.describe(test_url = "URL To Track:", test_schedule = "Schedule For Task(in seconds):")
 async def test_celery_scheduling(interaction: discord.Interaction, test_url: str, test_schedule: int):
     await interaction.response.defer()
-    celery_scheduled_data = await get_test_celery_schedule(test_url=test_url, test_schedule=test_schedule, user=interaction.user.id)
+    celery_scheduled_data = await get_test_celery_schedule(test_url=test_url, test_schedule=test_schedule, userid=str(interaction.user.id), username=interaction.user.name)
     await interaction.followup.send(f"{interaction.user.mention} celery says: `{celery_scheduled_data}`")
 
 @bot.tree.command(name="test_celery_schedule_delete")
